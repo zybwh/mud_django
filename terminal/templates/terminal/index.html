@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Laravel</title>
+
+        <!-- Fonts -->
+        <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
+
+        <!-- CSS -->
+        <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/0.11.2/js/jquery.terminal.min.js"></script>
+        
+        <!-- JS -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/0.11.2/css/jquery.terminal.min.css" rel="stylesheet"/>
+    </head>
+
+    <body style="margin:0px">
+        <div id="term" style="height:100vh; padding:0px; padding-left:10px; padding-top:10px"></div>
+    </body>
+    <script>
+        jQuery(function($, undefined) {
+            $('#term').terminal(function(command, term) {
+                if (command !== '') {
+                    try {
+                        // var result = window.eval(command);
+                        $.ajax({type: 'GET', data: {'command': command}, url: "http://172.25.0.57:8000/backend/", success: function(result){
+                            term.echo(result.msg)
+                        }});
+                    } catch(e) {
+                        term.error(new String(e));
+                    }
+                } else {
+                   term.echo('');
+                }
+            }, {
+                greetings: '',
+                name: 'mud',
+                height: $('#term').height,
+                prompt: '> '
+            });
+        });
+</script>
+</html>

@@ -7,7 +7,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>mud</title>
+        <title>江湖群侠传</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
@@ -31,10 +31,13 @@
                     try {
                         // var result = window.eval(command);
                         sent = true;
-                        $.ajax({type: 'GET', data: {'command': command}, url: "http://localhost:8000/backend/", 
-                            success: function(result){
-                                term.echo(result.msg);
-                                sent = false;},
+                        $.ajax({type: 'POST', data: {
+                                    'command': command, 
+                                    csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                                url: "http://localhost:8000/backend/", 
+                                success: function(result){
+                                    term.echo(result.msg);
+                                    sent = false;},
                             });
                     } catch(e) {
                         term.error(new String(e));

@@ -11,11 +11,7 @@ from initial import Initial
 # Create your views here.
 
 def start(request):
-    if 'token' in request.GET:
-        # data = Initial.resume(request.GET['token'])
-        data = 'hahah'
-    else:
-        data = {'msg':'欢迎来到mud！\n 输入help获得更多信息'}
+    data = {'msg':'欢迎来到江湖群侠传！\n\t 输入help获得更多信息'}
     return JsonResponse(data)
 
 
@@ -52,7 +48,7 @@ commandList = {'start': start, 'help': helpFun, 'map': mapFun,
                 'w': goNorth, 's': goSouth, 'a': goWest, 'd': goEast}
 
 def main(request):
-    command = request.GET['command']
+    command = request.POST['command']
     if command in commandList:
         return commandList[command](request)
     else:

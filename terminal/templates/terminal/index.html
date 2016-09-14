@@ -1,3 +1,4 @@
+{% csrf_token %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -27,7 +28,7 @@
                 if (command !== '') {
                     try {
                         // var result = window.eval(command);
-                        $.ajax({type: 'GET', data: {'command': command}, url: "http://172.25.0.57:8000/backend/", success: function(result){
+                        $.ajax({type: 'GET', data: {'command': command}, url: "http://localhost:8000/backend/", success: function(result){
                             term.echo(result.msg)
                         }});
                     } catch(e) {

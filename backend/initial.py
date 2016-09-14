@@ -9,11 +9,12 @@ import os
 import json
 
 class Initial :
-    def new():
-        with open('txtFile' + os.sep + 'welcome.txt', 'r') as data_file:
-            data = json.load(data_file)
-        return data
+    def new(self):
+        # with open('txtFile' + os.sep + 'welcome.txt', 'r') as data_file:
+        #     data = json.load(data_file)
+        # return data
+        return 0
 
-    def resume():
+    def resume(self):
         return 0
 

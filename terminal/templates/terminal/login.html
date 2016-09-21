@@ -15,6 +15,7 @@
         <!-- JS -->
         <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/0.11.2/js/jquery.terminal.min.js"></script>
+        <script src="{% static 'js/unix_formatting.js' %}"></script>
         
         <!-- CSS -->
         <link href="{% static 'css/jquery.terminal.min.css' %}" rel="stylesheet"/>
@@ -32,11 +33,11 @@
                 url: "http://localhost:8000/backend/login/", 
                 success: function(result){
                     if (result.code){
-                        $.terminal.active().echo(result.msg);
+                        $.terminal.active().echo("[[;red;]"+result.msg+"]");
                         setTimeout(function(){window.location.href  = "http://localhost:8000";}, 1000);
                         callback(true);
                     }else{
-                        $.terminal.active().echo(result.msg);
+                        $.terminal.active().error(result.msg);
                         callback(false);
                     }
                 },

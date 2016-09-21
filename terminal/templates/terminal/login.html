@@ -32,10 +32,11 @@
                 url: "http://localhost:8000/backend/login/", 
                 success: function(result){
                     if (result.code){
-                        window.location.href  = "localhost:8000";
+                        $.terminal.active().echo(result.msg);
+                        setTimeout(function(){window.location.href  = "http://localhost:8000";}, 1000);
                         callback(true);
                     }else{
-                        console.log('error');
+                        $.terminal.active().echo(result.msg);
                         callback(false);
                     }
                 },
@@ -46,7 +47,7 @@
         jQuery(function($) {
             $('#term').terminal({}, {
                 login: loginFunc,
-                greetings: "You are authenticated"});
+                greetings: ""});
         });
 </script>
 </html>

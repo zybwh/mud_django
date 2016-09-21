@@ -32,13 +32,13 @@
                         // var result = window.eval(command);
                         sent = true;
                         $.ajax({type: 'POST', data: {
-                                    'command': command, 
-                                    csrfmiddlewaretoken: '{{ csrf_token }}',}, 
-                                url: "http://localhost:8000/backend/", 
-                                success: function(result){
-                                    term.echo(result.msg);
-                                    sent = false;},
-                            });
+                                'command': command, 
+                                csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                            url: "http://localhost:8000/backend/", 
+                            success: function(result){
+                                term.echo(result.msg);
+                                sent = false;},
+                        });
                     } catch(e) {
                         term.error(new String(e));
                     }

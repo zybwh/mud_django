@@ -7,3 +7,6 @@ from django.template import loader
 
 def index(request):
     return render(request, 'terminal/index.html')
+
+def login(request):
+    return render(request, 'terminal/login.html')

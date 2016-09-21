@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from django.http import JsonResponse
+from django.contrib.auth import authenticate, login
 
 from initial import Initial
 
@@ -53,4 +54,17 @@ def main(request):
         return commandList[command](request)
     else:
         return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
+
+def loginUser(request):
+    username = request.POST.get('user')
+    pwd = request.POST.get('password')
+    user = authenticate(username=username, password=pwd)
+    if user is not None:
+        login(request, user)
+        return JsonResponse({'msg':'登录成功！', 'code': 1})
+    else:
+        return JsonResponse({'msg':'用户名密码不正确！', 'code': 0})
+
+
+
 

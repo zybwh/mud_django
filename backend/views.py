@@ -6,6 +6,8 @@ from django.http import HttpResponse
 from django.template import loader
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
 
 from initial import Initial
 
@@ -55,15 +57,25 @@ def main(request):
     else:
         return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
 
+@csrf_exempt
 def loginUser(request):
     username = request.POST.get('user')
     pwd = request.POST.get('password')
     user = authenticate(username=username, password=pwd)
     if user is not None:
         login(request, user)
-        return JsonResponse({'msg':'登录成功！', 'code': 1})
+        return JsonResponse({'msg':'登陆成功！', 'code': 1})
     else:
         return JsonResponse({'msg':'用户名密码不正确！', 'code': 0})
+
+@csrf_exempt
+def regUser(request):
+    username = request.POST.get('user')
+    pwd = request.POST.get('password')
+    if User.objects.filter(username=username).exists():
+        return  JsonResponse({'msg':'用户名已存在！', 'code': 0})
+    user = User.objects.create_user(username,'',pwd)
+    return JsonResponse({'msg':'注册成功！', 'code': 1})
 
 
 

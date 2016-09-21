@@ -10,3 +10,6 @@ def index(request):
 
 def login(request):
     return render(request, 'terminal/login.html')
+
+def reg(request):
+    return render(request, 'terminal/reg.html')

@@ -1,0 +1,54 @@
+{% csrf_token %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>江湖群侠传</title>
+
+        <!-- Fonts -->
+        <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
+
+        <!-- JS -->
+        <script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.terminal/0.11.2/js/jquery.terminal.min.js"></script>
+        <script src="{% static 'js/unix_formatting.js' %}"></script>
+        
+        <!-- CSS -->
+        <link href="{% static 'css/jquery.terminal.min.css' %}" rel="stylesheet"/>
+    </head>
+
+    <body style="margin:0px">
+        <div id="term" style="height:100vh; padding:0px; padding-left:10px; padding-top:10px"></div>
+    </body>
+    <script>
+        function loginFunc(name, password, callback) {
+            $.ajax({type: 'POST', data: {
+                    'user': name,
+                    'password': password, 
+                    csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                url: "http://localhost:8000/backend/reg/", 
+                success: function(result){
+                    if (result.code){
+                        $.terminal.active().echo("[[;red;]"+result.msg+"]");
+                        setTimeout(function(){window.location.href  = "http://localhost:8000/login/";}, 1000);
+                        callback(true);
+                    }else{
+                        $.terminal.active().error(result.msg);
+                        callback(false);
+                    }
+                },
+            });
+        }
+
+
+        jQuery(function($) {
+            $('#term').terminal({}, {
+                login: loginFunc,
+                greetings: ""});
+        });
+</script>
+</html>

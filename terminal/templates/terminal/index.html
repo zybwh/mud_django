@@ -37,6 +37,9 @@
                             url: "http://localhost:8000/backend/", 
                             success: function(result){
                                 term.echo(result.msg);
+                                if (result.redir) {
+                                    setTimeout(function(){window.location.href  = "http://localhost:8000/"+ result.redir;}, 1000);
+                                }
                                 sent = false;},
                         });
                     } catch(e) {

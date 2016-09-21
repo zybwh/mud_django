@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from django.http import JsonResponse
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 
@@ -52,10 +52,22 @@ commandList = {'start': start, 'help': helpFun, 'map': mapFun,
 
 def main(request):
     command = request.POST['command']
-    if command in commandList:
-        return commandList[command](request)
+
+    if not request.user.is_authenticated():    
+        if command == 'login':
+            return JsonResponse({'msg': '转向登录页面', 'redir': 'login'})
+        if command == 'register':
+            return JsonResponse({'msg': '转向注册页面', 'redir': 'reg'})
+        return JsonResponse({'msg': '[[;red;]您还没有登录！]\n\t请输入 [[;green;]login]     进行登录\n\t或者   [[;green;]register]  进行注册！'})
     else:
-        return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
+        if command == 'logout':
+            logout(request)
+            return JsonResponse({'msg': '登出成功！'})
+
+        if command in commandList:
+            return commandList[command](request)
+        else:
+            return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
 
 @csrf_exempt
 def loginUser(request):

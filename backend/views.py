@@ -23,7 +23,7 @@ def start(request):
 def helpFun(request):
     return JsonResponse({'msg': '还没做'})
 
-def mapFun(request, direction=4):
+def mapFun(request, direction=0):
     current_location = Users.objects.get(userid=request.user.id).location
     if direction == 4:
         #return 地图
@@ -39,7 +39,7 @@ def mapFun(request, direction=4):
         return JsonResponse({'msg': u'你现在位于 [[;yellow;]' + mapObject.translate(current_location) + 
             u'] \n 你可以像以下方向行走：\n ' + msg})
     else:
-        dest = mapObject.moveDirection(current_location, mapObject.dirs[direction])
+        dest = mapObject.moveDirection(current_location, direction)
         if dest:
             Users.objects.filter(userid=request.user.id).update(location=dest)
             return JsonResponse({'msg': u'向'+mapObject.DIRs[direction]+u'走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
@@ -47,21 +47,10 @@ def mapFun(request, direction=4):
             return JsonResponse({'msg': u'大侠，[[;yellow;]'+mapObject.DIRs[direction]+u'边] 真的没路了！换个方向吧！'})
 
 
-def goNorth(request):
-    return mapFun(request, 0)
+def go(request):
+    return mapFun(request, request.POST['command'])
 
-def goSouth(request):
-    return mapFun(request, 1)
-
-def goWest(request):
-    print request.user
-    return mapFun(request, 2)
-
-def goEast(request):
-    return mapFun(request, 3)
-
-commandList = {'start': start, 'help': helpFun, 'map': mapFun,
-                'w': goNorth, 's': goSouth, 'a': goWest, 'd': goEast}
+commandList = {'start': start, 'help': helpFun, 'map': mapFun}
 
 @csrf_exempt
 def main(request):
@@ -80,7 +69,8 @@ def main(request):
 
         # if not Users.objects.filter(userid=request.user.id).exists():
         #     Users.objects.create(userid=request.user.id, )
-
+        if command in mapObject.dirs:
+            return go(request)
         if command in commandList:
             return commandList[command](request)
         else:

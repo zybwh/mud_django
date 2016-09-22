@@ -8,13 +8,15 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
-
-from initial import Initial
+from backend.models import Users
+from backend.map.map import MapObject
 
 # Create your views here.
 
+mapObject = MapObject()
+
 def start(request):
-    data = {'msg':'欢迎来到江湖群侠传！\n\t 输入help获得更多信息'}
+    data = {'msg':u'欢迎来到江湖群侠传！\n\t 输入 [[;green;]help] 获得更多信息'}
     return JsonResponse(data)
 
 
@@ -23,17 +25,48 @@ def helpFun(request):
 
 
 def mapFun(request, direction=0):
+    current_location = Users.objects.get(userid=request.user.id).location
     if direction == 0:
         #return 地图
-        return JsonResponse({'msg': '还没做'})
+
+        surround = mapObject.getSurround(current_location)
+
+        msg = ""
+
+        for direction in surround.keys():
+            if surround[direction]:
+                msg += u'[[;green;]' + direction + ']: [[;yellow;] '+ mapObject.translate(surround[direction]) + ']   '
+
+        return JsonResponse({'msg': u'你现在位于 [[;yellow;]' + mapObject.translate(current_location) + 
+            u'] \n 你可以像以下方向行走：\n ' + msg})
     elif direction == 1:
-        return JsonResponse({'msg': '向北走'})
+        dest = mapObject.moveDirection(current_location, 'w')
+        if dest:
+            Users.objects.filter(userid=request.user.id).update(location=dest)
+            return JsonResponse({'msg': u'向北走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
+        else:
+            return JsonResponse({'msg': u'大侠，[[;yellow;]北边] 真的没路了！换个方向吧！'})
     elif direction == 2:
-        return JsonResponse({'msg': '向南走'})
+        dest = mapObject.moveDirection(current_location, 's')
+        if dest:
+            Users.objects.filter(userid=request.user.id).update(location=dest)
+            return JsonResponse({'msg': u'向南走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
+        else:
+            return JsonResponse({'msg': u'大侠，[[;yellow;]南边] 真的没路了！换个方向吧！'})
     elif direction == 3:
-        return JsonResponse({'msg': '向西走'})
+        dest = mapObject.moveDirection(current_location, 'a')
+        if dest:
+            Users.objects.filter(userid=request.user.id).update(location=dest)
+            return JsonResponse({'msg': u'向西走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
+        else:
+            return JsonResponse({'msg': u'大侠，[[;yellow;]西边] 真的没路了！换个方向吧！'})
     elif direction == 4:
-        return JsonResponse({'msg': '向东走'})
+        dest = mapObject.moveDirection(current_location, 'd')
+        if dest:
+            Users.objects.filter(userid=request.user.id).update(location=dest)
+            return JsonResponse({'msg': u'向东走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
+        else:
+            return JsonResponse({'msg': u'大侠，[[;yellow;]东边] 真的没路了！换个方向吧！'})
 
 def goNorth(request):
     return mapFun(request, 1)
@@ -63,6 +96,9 @@ def main(request):
         if command == 'logout':
             logout(request)
             return JsonResponse({'msg': '登出成功！'})
+
+        # if not Users.objects.filter(userid=request.user.id).exists():
+        #     Users.objects.create(userid=request.user.id, )
 
         if command in commandList:
             return commandList[command](request)

@@ -5,7 +5,7 @@ from django.db import models
 
 # Create your models here.
 
-class User(models.Model):
+class Users(models.Model):
     userid = models.ForeignKey(User, unique=True)
     username = models.CharField(max_length=30, unique=True)
     location = models.CharField(max_length=30)

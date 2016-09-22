@@ -9,6 +9,10 @@ from django.contrib.auth import authenticate, login
 
 class MapObject():
 
+    
+    dirs = ['w','s','a','d']
+    DIRs = [u'北',u'南',u'西',u'东']
+
 
     worldMap = {
         'luoyang' : {'w': 'taiyuan', 's': 'xiangyang', 'a': 'jingzhaofu', 'd': 'xuzhou'},

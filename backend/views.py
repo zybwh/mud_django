@@ -23,10 +23,9 @@ def start(request):
 def helpFun(request):
     return JsonResponse({'msg': '还没做'})
 
-
-def mapFun(request, direction=0):
+def mapFun(request, direction=4):
     current_location = Users.objects.get(userid=request.user.id).location
-    if direction == 0:
+    if direction == 4:
         #return 地图
 
         surround = mapObject.getSurround(current_location)
@@ -39,50 +38,32 @@ def mapFun(request, direction=0):
 
         return JsonResponse({'msg': u'你现在位于 [[;yellow;]' + mapObject.translate(current_location) + 
             u'] \n 你可以像以下方向行走：\n ' + msg})
-    elif direction == 1:
-        dest = mapObject.moveDirection(current_location, 'w')
+    else:
+        dest = mapObject.moveDirection(current_location, mapObject.dirs[direction])
         if dest:
             Users.objects.filter(userid=request.user.id).update(location=dest)
-            return JsonResponse({'msg': u'向北走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
+            return JsonResponse({'msg': u'向'+mapObject.DIRs[direction]+u'走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
         else:
-            return JsonResponse({'msg': u'大侠，[[;yellow;]北边] 真的没路了！换个方向吧！'})
-    elif direction == 2:
-        dest = mapObject.moveDirection(current_location, 's')
-        if dest:
-            Users.objects.filter(userid=request.user.id).update(location=dest)
-            return JsonResponse({'msg': u'向南走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
-        else:
-            return JsonResponse({'msg': u'大侠，[[;yellow;]南边] 真的没路了！换个方向吧！'})
-    elif direction == 3:
-        dest = mapObject.moveDirection(current_location, 'a')
-        if dest:
-            Users.objects.filter(userid=request.user.id).update(location=dest)
-            return JsonResponse({'msg': u'向西走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
-        else:
-            return JsonResponse({'msg': u'大侠，[[;yellow;]西边] 真的没路了！换个方向吧！'})
-    elif direction == 4:
-        dest = mapObject.moveDirection(current_location, 'd')
-        if dest:
-            Users.objects.filter(userid=request.user.id).update(location=dest)
-            return JsonResponse({'msg': u'向东走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
-        else:
-            return JsonResponse({'msg': u'大侠，[[;yellow;]东边] 真的没路了！换个方向吧！'})
+            return JsonResponse({'msg': u'大侠，[[;yellow;]'+mapObject.DIRs[direction]+u'边] 真的没路了！换个方向吧！'})
+
 
 def goNorth(request):
-    return mapFun(request, 1)
+    return mapFun(request, 0)
 
 def goSouth(request):
-    return mapFun(request, 2)
+    return mapFun(request, 1)
 
 def goWest(request):
-    return mapFun(request, 3)
+    print request.user
+    return mapFun(request, 2)
 
 def goEast(request):
-    return mapFun(request, 4)
+    return mapFun(request, 3)
 
 commandList = {'start': start, 'help': helpFun, 'map': mapFun,
                 'w': goNorth, 's': goSouth, 'a': goWest, 'd': goEast}
 
+@csrf_exempt
 def main(request):
     command = request.POST['command']
 

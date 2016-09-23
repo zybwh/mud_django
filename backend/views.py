@@ -62,10 +62,30 @@ def stats(request):
     msg = makeStatsMsg(stats)
     return JsonResponse({'msg': msg})
 
+def ppl(request):
+    current_user = Users.objects.get(userid=request.user.id)
+    location = current_user.location
+    npcs = Npc.objects.filter(location=location).order_by('id')
+    users = Users.objects.filter(location=location).order_by('id')
+    msg = u'除了你以外，还有 [[;green;]' + str(npcs.count() + users.count() - 1) +  u'] 个人在 [[;yellow;]' + mapObject.translate(location) + u'] 闲逛。\n'
+    i = 1
+    for user in users:
+        if user.username == current_user.username:
+            continue
+        msg += str(i) + '. [[;orange;]' + user.username + ']  '
+        i += 1
+
+    for npc in npcs:
+        msg += str(i) + '. [[;yellow;]' + npc.username + ']  '
+        i += 1
+
+
+    return JsonResponse({'msg': msg})
+
 
 
 commandList = {'start': start, 'help': helpFun, 'map': mapFun,
-                'stats': stats}
+                'stats': stats, 'ppl': ppl}
 
 @csrf_exempt
 def main(request):

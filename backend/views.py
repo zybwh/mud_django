@@ -29,14 +29,15 @@ def mapFun(request, direction=0):
     if direction == 0:
         surround = mapObject.getSurround(current_location)
 
-        msg = ""
+        msg = u'你现在位于 [[;yellow;]' + mapObject.translate(current_location) + u'] \n'
+        msg += u'当前地图有 [[;green;]' + str(mapObject.getPeople(current_location)) + u'] 个人，输入 [[;green;]ppl] 查看详细信息。\n'
+        msg += u'你可以像以下方向行走：\n'
 
         for direction in surround.keys():
             if surround[direction]:
                 msg += u'[[;green;]' + direction + ']: [[;yellow;] '+ mapObject.translate(surround[direction]) + ']   '
 
-        return JsonResponse({'msg': u'你现在位于 [[;yellow;]' + mapObject.translate(current_location) + 
-            u'] \n 你可以像以下方向行走：\n ' + msg})
+        return JsonResponse({'msg':   msg})
     else:
         dest = mapObject.moveDirection(current_location, direction)
         if dest:

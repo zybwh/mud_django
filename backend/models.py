@@ -5,6 +5,8 @@ from django.db import models
 
 # Create your models here.
 
+class Guilds(models.Model):
+    name = models.CharField(max_length=30)
 
 
 class UserStats(models.Model):
@@ -17,7 +19,7 @@ class UserStats(models.Model):
     intelligent = models.PositiveIntegerField(default=0)
     currentExp = models.PositiveIntegerField(default=0)
     nextExp = models.PositiveIntegerField(default=0)
-    
+
 
 class Users(models.Model):
     userid = models.OneToOneField(User)
@@ -27,3 +29,11 @@ class Users(models.Model):
     lastLogin = models.DateTimeField()
     lastToken = models.CharField(max_length=32)
     stats = models.OneToOneField(UserStats)
+    guild = models.ForeignKey(Guilds, null=True)
+
+class Npc(models.Model):
+    username = models.CharField(max_length=30)
+    location = models.CharField(max_length=30)
+    stats = models.OneToOneField(UserStats)
+    description = models.CharField(max_length=200)
+    guild = models.ForeignKey(Guilds, null=True)

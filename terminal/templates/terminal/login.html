@@ -28,8 +28,7 @@
         function loginFunc(name, password, callback) {
             $.ajax({type: 'POST', data: {
                     'user': name,
-                    'password': password, 
-                    csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                    'password': password}, 
                 url: "http://localhost:8000/backend/login/", 
                 success: function(result){
                     if (result.code){

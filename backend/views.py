@@ -8,8 +8,9 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
-from backend.models import Users
+from backend.models import *
 from backend.map.map import MapObject
+from django.forms.models import model_to_dict
 
 # Create your views here.
 
@@ -26,8 +27,6 @@ def helpFun(request):
 def mapFun(request, direction=4):
     current_location = Users.objects.get(userid=request.user.id).location
     if direction == 4:
-        #return 地图
-
         surround = mapObject.getSurround(current_location)
 
         msg = ""
@@ -54,18 +53,41 @@ def goSouth(request):
     return mapFun(request, 1)
 
 def goWest(request):
-    print request.user
     return mapFun(request, 2)
 
 def goEast(request):
     return mapFun(request, 3)
 
+
+
+def makeStatsMsg(stats):
+    msg = "气血：[[;red;]" + str(stats.currentHp) + "]/[[;red;]" + str(stats.maxHp) + "]\n"
+    msg += "内力：[[;blue;]" + str(stats.currentMana) + "]/[[;blue;]" + str(stats.maxMana) + "]\n"
+    msg += "修为：[[;green;]" + str(stats.currentExp) + "]/[[;green;]" + str(stats.nextExp) + "]\n"
+    msg += "力量：[[;yellow;]" + str(stats.power) + "]  "
+    msg += "灵巧：[[;yellow;]" + str(stats.agility) + "]  "
+    msg += "悟性：[[;yellow;]" + str(stats.intelligent) + "]"
+
+    return msg
+
+
+
+def stats(request):
+    stats = Users.objects.get(userid=request.user).stats
+    msg = makeStatsMsg(stats)
+    return JsonResponse({'msg': msg})
+
+
+
 commandList = {'start': start, 'help': helpFun, 'map': mapFun,
-                'w': goNorth, 's': goSouth, 'a': goWest, 'd': goEast}
+                'w': goNorth, 's': goSouth, 'a': goWest, 'd': goEast,
+                'stats': stats}
 
 @csrf_exempt
 def main(request):
-    command = request.POST['command']
+    command = request.POST['command'].lower()
+
+
 
     if not request.user.is_authenticated():    
         if command == 'login':

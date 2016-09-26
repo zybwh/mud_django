@@ -97,7 +97,7 @@ def selection(request, command):
 
 
     if current_user.pplList is None:
-        return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
+        return JsonResponse({'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'})
 
     pplList = json.loads(current_user.pplList)
 
@@ -106,7 +106,7 @@ def selection(request, command):
     elif index < len(pplList['n']) + len(pplList['p']):
         target = Users.objects.filter(id=pplList['p'][index], location=location)
     else:
-        return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
+        return JsonResponse({'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'})
     if target.exists():
         msg = u'[[;yellow;]' + target[0].username + u']\n'
         msg += u'[[;yellow;]' + target[0].guild.name + u']\n'
@@ -145,7 +145,7 @@ def main(request):
         if command in commandList:
             return commandList[command](request)
         else:
-            return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
+            return JsonResponse({'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'})
 
 
 @csrf_exempt

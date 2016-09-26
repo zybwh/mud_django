@@ -28,7 +28,7 @@ class MapObject():
         'wudangshan' : {'w': 'taijiguangchang', 's': '', 'a': 'wudangshanjiao', 'd':''},
         'taijiguangchang': {'w': 'zixiaodian', 's': 'wudangshan', 'a': '', 'd': 'longhudian'},
         'zixiaodian': {'w': 'zijincheng', 's': 'taijiguangchang', 'a:': 'yuxugong', 'd': ''},
-        'zijincheng': {'w': '', 's': 'zixiaodian', 's': '', 'd': ''},
+        'zijincheng': {'w': '', 's':'zixiaodian', 'a': '', 'd': ''},
         'yuxugong' : {'w': '', 's': '', 'a': '', 'd': 'zixiaodian'},
         'longhudian': {'w': '', 's': '', 'a': 'taijiguangchang', 'd': ''},
         #襄阳

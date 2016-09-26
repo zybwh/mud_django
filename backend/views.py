@@ -11,6 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 from backend.models import *
 from backend.map.map import MapObject
 from django.forms.models import model_to_dict
+import json
+
 
 # Create your views here.
 
@@ -30,7 +32,7 @@ def mapFun(request, direction=0):
         surround = mapObject.getSurround(current_location)
 
         msg = u'你现在位于 [[;yellow;]' + mapObject.translate(current_location) + u'] \n'
-        msg += u'当前地图有 [[;green;]' + str(mapObject.getPeople(current_location)) + u'] 个人，输入 [[;green;]ppl] 查看详细信息。\n'
+        msg += u'当前地图有 [[;green;]' + str(mapObject.getPeople(current_location)) + u'] 个人，输入 [[;green;]who] 查看详细信息。\n'
         msg += u'你可以像以下方向行走：\n'
 
         for direction in surround.keys():
@@ -41,7 +43,7 @@ def mapFun(request, direction=0):
     else:
         dest = mapObject.moveDirection(current_location, direction)
         if dest:
-            Users.objects.filter(userid=request.user.id).update(location=dest)
+            Users.objects.filter(userid=request.user.id).update(location=dest, pplList=None)
             return JsonResponse({'msg': u'向'+mapObject.DIRs[direction]+u'走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
         else:
             return JsonResponse({'msg': u'大侠，[[;yellow;]'+mapObject.DIRs[direction]+u'边] 真的没路了！换个方向吧！'})
@@ -62,36 +64,65 @@ def stats(request):
     msg = makeStatsMsg(stats)
     return JsonResponse({'msg': msg})
 
-def ppl(request):
-    current_user = Users.objects.get(userid=request.user.id)
-    location = current_user.location
+def who(request):
+    current_user = Users.objects.filter(userid=request.user.id)
+    location = current_user[0].location
     npcs = Npc.objects.filter(location=location).order_by('id')
     users = Users.objects.filter(location=location).order_by('id')
     msg = u'除了你以外，还有 [[;green;]' + str(npcs.count() + users.count() - 1) +  u'] 个人在 [[;yellow;]' + mapObject.translate(location) + u'] 闲逛。\n'
     i = 1
-    for user in users:
-        if user.username == current_user.username:
-            continue
-        msg += str(i) + '. [[;orange;]' + user.username + ']  '
-        i += 1
+
+    pplList = {'n':[], 'p':[]}
 
     for npc in npcs:
         msg += str(i) + '. [[;yellow;]' + npc.username + ']  '
         i += 1
+        pplList['n'].append(npc.id)
 
+    for user in users:
+        if user.username == current_user[0].username:
+            continue
+        msg += str(i) + '. [[;blue;]' + user.username + ']  '
+        i += 1
+        pplList['p'].append(user.id)
+
+    current_user.update(pplList=json.dumps(pplList))
 
     return JsonResponse({'msg': msg})
+
+def selection(request, command):
+    index = int(command) - 1 #command starts from 1, index starts from 0
+    current_user = Users.objects.get(userid=request.user.id)
+    location = current_user.location
+
+
+    if current_user.pplList is None:
+        return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
+
+    pplList = json.loads(current_user.pplList)
+
+    if index < len(pplList['n']):
+        target = Npc.objects.filter(id=pplList['n'][index], location=location)
+    elif index < len(pplList['n']) + len(pplList['p']):
+        target = Users.objects.filter(id=pplList['p'][index], location=location)
+    else:
+        return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
+    if target.exists():
+        msg = u'[[;yellow;]' + target[0].username + u']\n'
+        msg += u'[[;yellow;]' + target[0].guild.name + u']\n'
+        msg += target[0].description
+        return JsonResponse({'msg': msg})
+    else:
+        return JsonResponse({'msg': u'这个人已经离开了此地图，请输入[[;green;]who]重新查看当前地图人物。'})
 
 
 
 commandList = {'start': start, 'help': helpFun, 'map': mapFun,
-                'stats': stats, 'ppl': ppl}
+                'stats': stats, 'who': who}
 
 @csrf_exempt
 def main(request):
     command = request.POST['command'].lower()
-
-
 
     if not request.user.is_authenticated():    
         if command == 'login':
@@ -106,12 +137,16 @@ def main(request):
 
         # if not Users.objects.filter(userid=request.user.id).exists():
         #     Users.objects.create(userid=request.user.id, )
+
+        if command >= '1' and command <= '9':
+            return selection(request, command)
         if command in mapObject.dirs:
             return mapFun(request, command)
         if command in commandList:
             return commandList[command](request)
         else:
             return JsonResponse({'msg':'指令错误！输入help获得更多信息'})
+
 
 @csrf_exempt
 def loginUser(request):

@@ -20,11 +20,11 @@ mapObject = MapObject()
 
 def start(request):
     data = {'msg':u'欢迎来到江湖群侠传！\n\t 输入 [[;green;]help] 获得更多信息'}
-    return JsonResponse(data)
+    return data
 
 
 def helpFun(request):
-    return JsonResponse({'msg': '还没做'})
+    return {'msg': '还没做'}
 
 def mapFun(request, direction=0):
     current_location = Users.objects.get(userid=request.user.id).location
@@ -39,16 +39,18 @@ def mapFun(request, direction=0):
             if surround[direction]:
                 msg += u'[[;green;]' + direction + ']: [[;yellow;] '+ mapObject.translate(surround[direction]) + ']   '
 
-        return JsonResponse({'msg':   msg})
+        return {'msg': msg}
     else:
         dest = mapObject.moveDirection(current_location, direction)
         if dest:
             Users.objects.filter(userid=request.user.id).update(location=dest, pplList=None)
-            return JsonResponse({'msg': u'向'+mapObject.DIRs[direction]+u'走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'})
+            return {'msg': u'向'+mapObject.DIRs[direction]+u'走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'}
         else:
-            return JsonResponse({'msg': u'大侠，[[;yellow;]'+mapObject.DIRs[direction]+u'边] 真的没路了！换个方向吧！'})
+            return {'msg': u'大侠，[[;yellow;]'+mapObject.DIRs[direction]+u'边] 真的没路了！换个方向吧！'}
 
-def makeStatsMsg(stats):
+
+def stats(request):
+    stats = Users.objects.get(userid=request.user).stats
     msg = "气血：[[;red;]" + str(stats.currentHp) + "]/[[;red;]" + str(stats.maxHp) + "]\n"
     msg += "内力：[[;blue;]" + str(stats.currentMana) + "]/[[;blue;]" + str(stats.maxMana) + "]\n"
     msg += "修为：[[;green;]" + str(stats.currentExp) + "]/[[;green;]" + str(stats.nextExp) + "]\n"
@@ -56,13 +58,7 @@ def makeStatsMsg(stats):
     msg += "灵巧：[[;yellow;]" + str(stats.agility) + "]  "
     msg += "悟性：[[;yellow;]" + str(stats.intelligent) + "]"
 
-    return msg
-
-
-def stats(request):
-    stats = Users.objects.get(userid=request.user).stats
-    msg = makeStatsMsg(stats)
-    return JsonResponse({'msg': msg})
+    return {'msg': msg}
 
 def who(request):
     current_user = Users.objects.filter(userid=request.user.id)
@@ -88,7 +84,7 @@ def who(request):
 
     current_user.update(pplList=json.dumps(pplList))
 
-    return JsonResponse({'msg': msg})
+    return {'msg': msg}
 
 def selection(request, command):
     index = int(command) - 1 #command starts from 1, index starts from 0
@@ -97,7 +93,7 @@ def selection(request, command):
 
 
     if current_user.pplList is None:
-        return JsonResponse({'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'})
+        return {'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'}
 
     pplList = json.loads(current_user.pplList)
 
@@ -106,14 +102,14 @@ def selection(request, command):
     elif index < len(pplList['n']) + len(pplList['p']):
         target = Users.objects.filter(id=pplList['p'][index], location=location)
     else:
-        return JsonResponse({'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'})
+        return {'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'}
     if target.exists():
         msg = u'[[;yellow;]' + target[0].username + u']\n'
         msg += u'[[;yellow;]' + target[0].guild.name + u']\n'
         msg += target[0].description
-        return JsonResponse({'msg': msg})
+        return {'msg': msg}
     else:
-        return JsonResponse({'msg': u'这个人已经离开了此地图，请输入[[;green;]who]重新查看当前地图人物。'})
+        return {'msg': u'这个人已经离开了此地图，请输入[[;green;]who]重新查看当前地图人物。'}
 
 
 
@@ -124,28 +120,31 @@ commandList = {'start': start, 'help': helpFun, 'map': mapFun,
 def main(request):
     command = request.POST['command'].lower()
 
+    result = {}
     if not request.user.is_authenticated():    
         if command == 'login':
-            return JsonResponse({'msg': '转向登录页面', 'redir': 'login'})
+            result = {'msg': '转向登录页面', 'redir': 'login'}
         if command == 'register':
-            return JsonResponse({'msg': '转向注册页面', 'redir': 'reg'})
-        return JsonResponse({'msg': '[[;red;]您还没有登录！]\n\t请输入 [[;green;]login]     进行登录\n\t或者   [[;green;]register]  进行注册！'})
+            result = {'msg': '转向注册页面', 'redir': 'reg'}
+        result = {'msg': '[[;red;]您还没有登录！]\n\t请输入 [[;green;]login]     进行登录\n\t或者   [[;green;]register]  进行注册！'}
     else:
         if command == 'logout':
             logout(request)
-            return JsonResponse({'msg': '登出成功！'})
+            result = {'msg': '登出成功！'}
 
         # if not Users.objects.filter(userid=request.user.id).exists():
         #     Users.objects.create(userid=request.user.id, )
 
-        if command >= '1' and command <= '9':
-            return selection(request, command)
-        if command in mapObject.dirs:
-            return mapFun(request, command)
-        if command in commandList:
-            return commandList[command](request)
+        elif command >= '1' and command <= '9':
+            result = selection(request, command)
+        elif command in mapObject.dirs:
+            result = mapFun(request, command)
+        elif command in commandList:
+            result = commandList[command](request)
         else:
-            return JsonResponse({'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'})
+            result ={'msg':'[[;red;]指令错误！输入] [[;green;]help] [[;red;]获得更多信息]'}
+
+    return JsonResponse(result)
 
 
 @csrf_exempt

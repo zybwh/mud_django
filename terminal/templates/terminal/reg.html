@@ -25,30 +25,101 @@
         <div id="term" style="height:100vh; padding:0px; padding-left:10px; padding-top:10px"></div>
     </body>
     <script>
-        function loginFunc(name, password, callback) {
-            $.ajax({type: 'POST', data: {
-                    'user': name,
-                    'password': password, 
-                    csrfmiddlewaretoken: '{{ csrf_token }}',}, 
-                url: "http://localhost:8000/backend/reg/", 
-                success: function(result){
-                    if (result.code){
-                        $.terminal.active().echo("[[;red;]"+result.msg+"]");
-                        setTimeout(function(){window.location.href  = "http://localhost:8000/login/";}, 1000);
-                        callback(true);
-                    }else{
-                        $.terminal.active().error(result.msg);
-                        callback(false);
+        // function loginFunc(name, password, callback) {
+        //     $.ajax({type: 'POST', data: {
+        //             'user': name,
+        //             'password': password, 
+        //             csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+        //         url: "http://localhost:8000/backend/reg/", 
+        //         success: function(result){
+        //             if (result.code){
+        //                 $.terminal.active().echo("[[;red;]"+result.msg+"]");
+        //                 setTimeout(function(){window.location.href  = "http://localhost:8000/login/";}, 1000);
+        //                 callback(true);
+        //             }else{
+        //                 $.terminal.active().error(result.msg);
+        //                 callback(false);
+        //             }
+        //         },
+        //     });
+        // }
+
+
+        // jQuery(function($) {
+        //     $('#term').terminal({}, {
+        //         login: loginFunc,
+        //         greetings: ""});
+        // });
+        jQuery(function($, undefined) {
+            var sent = false;
+            $('#term').terminal(function(username, term) {
+                if (username !== '') {
+                    $('#term').terminal(function(nickname, term) {
+                        if (nickname !== '') {
+                            $('#term').terminal(function(password, term) {
+                                if (password !== '') {
+                                    try {
+                                        // var result = window.eval(command);
+                                        // sent = true;
+                                        // $.ajax({type: 'POST', data: {
+                                        //         'command': command, 
+                                        //         csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                                        //     url: "http://localhost:8000/backend/", 
+                                        //     success: function(result){
+                                        //         term.echo(result.msg);
+                                        //         if (result.redir) {
+                                        //             setTimeout(function(){window.location.href  = "http://localhost:8000/"+ result.redir;}, 1000);
+                                        //         }
+                                        //         sent = false;},
+                                        // });
+                                    } catch(e) {
+                                        term.error(new String(e));
+                                    }
+                                } else {
+                                   term.echo('');
+                                }
+                            }, {
+                                greetings: '',
+                                name: 'mud',
+                                height: $('#term').height,
+                                prompt: '> password',
+                                keydown: function(e) {
+                                //disable keyboard when animating
+                                    if(sent) {
+                                        return false;
+                                    }
+                                }
+                            });
+                        } else {
+                           term.echo('');
+                        }
+                    }, {
+                        greetings: '',
+                        name: 'mud',
+                        height: $('#term').height,
+                        prompt: '> nickname',
+                        keydown: function(e) {
+                        //disable keyboard when animating
+                            if(sent) {
+                                return false;
+                            }
+                        }
+                    });
+                } else {
+                   term.echo('');
+                }
+            }, {
+                greetings: '',
+                name: 'mud',
+                height: $('#term').height,
+                prompt: '> username',
+                keydown: function(e) {
+                //disable keyboard when animating
+                    if(sent) {
+                        return false;
                     }
-                },
+                }
             });
-        }
-
-
-        jQuery(function($) {
-            $('#term').terminal({}, {
-                login: loginFunc,
-                greetings: ""});
         });
 </script>
 </html>

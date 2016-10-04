@@ -30,6 +30,7 @@ class Users(models.Model):
     lastToken = models.CharField(max_length=32)
     stats = models.OneToOneField(UserStats)
     guild = models.ForeignKey(Guilds, null=True)
+    pplList = models.TextField(null=True)
 
 class Npc(models.Model):
     username = models.CharField(max_length=30)

@@ -160,7 +160,7 @@ def main(request):
     else:
         if command == 'logout':
             logout(request)
-            result = {'msg': '登出成功！'}
+            return JsonResponse({'msg': '登出成功！', 'code': 'logout'})
 
         # if not Users.objects.filter(userid=request.user.id).exists():
         #     Users.objects.create(userid=request.user.id, )

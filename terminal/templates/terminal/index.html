@@ -24,10 +24,45 @@
         <div id="term" style="height:100vh; padding:0px; padding-left:10px; padding-top:10px"></div>
     </body>
     <script>
+        function loginFunc(name, password, callback) {
+            $.ajax({type: 'POST', data: {
+                    'user': name,
+                    'password': password}, 
+                url: "http://localhost:8000/backend/login/", 
+                success: function(result){
+                    if (result.code){
+                        $.terminal.active().echo("[[;red;]"+result.msg+"]");
+                        callback(true);
+                        $.terminal.active().pop();
+                    }else{
+                        $.terminal.active().error(result.msg);
+                        callback(false);
+                    }
+                },
+            });
+        }
+        function regFunc(name, password, callback) {
+            $.ajax({type: 'POST', data: {
+                    'user': name,
+                    'password': password, 
+                    csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                url: "http://localhost:8000/backend/reg/", 
+                success: function(result){
+                    if (result.code){
+                        $.terminal.active().echo("[[;red;]"+result.msg+"]");
+                        setTimeout(function(){window.location.href  = "http://localhost:8000/login/";}, 1000);
+                        callback(true);
+                    }else{
+                        $.terminal.active().error(result.msg);
+                        callback(false);
+                    }
+                },
+            });
+        }
         jQuery(function($, undefined) {
             var sent = false;
             $('#term').terminal(function(command, term) {
-                if (command !== '') {
+                if (command != '') {
                     try {
                         // var result = window.eval(command);
                         sent = true;
@@ -38,7 +73,10 @@
                             success: function(result){
                                 term.echo(result.msg);
                                 if (result.redir) {
-                                    setTimeout(function(){window.location.href  = "http://localhost:8000/"+ result.redir;}, 1000);
+                                    term.push({}, {
+                                        login: result.redir=='login'?loginFunc:regFunc,
+                                        prompt: 'login > ',
+                                        name: 'login'});
                                 }
                                 sent = false;},
                         });
@@ -53,6 +91,7 @@
                 name: 'mud',
                 height: $('#term').height,
                 prompt: '> ',
+                competion: ['login', 'logout', 'exit'],
                 keydown: function(e) {
                 //disable keyboard when animating
                     if(sent) {

@@ -153,13 +153,14 @@ def main(request):
     if not request.user.is_authenticated():    
         if command == 'login':
             result = {'msg': '转向登录页面', 'redir': 'login'}
-        if command == 'register':
+        elif command == 'register':
             result = {'msg': '转向注册页面', 'redir': 'reg'}
-        result = {'msg': '[[;red;]您还没有登录！]\n\t请输入 [[;green;]login]     进行登录\n\t或者   [[;green;]register]  进行注册！'}
+        else:
+            result = {'msg': '[[;red;]您还没有登录！]\n\t请输入 [[;green;]login]     进行登录\n\t或者   [[;green;]register]  进行注册！'}
     else:
         if command == 'logout':
             logout(request)
-            result = {'msg': '登出成功！'}
+            return JsonResponse({'msg': '登出成功！', 'code': 'logout'})
 
         # if not Users.objects.filter(userid=request.user.id).exists():
         #     Users.objects.create(userid=request.user.id, )

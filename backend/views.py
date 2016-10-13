@@ -141,13 +141,14 @@ def talk(request, args):
 
 
 
-commandList = {'start': start, 'help': helpFun, 'stats': stats, 'who': who, 'map': mapFun,
+commandLists = {'main': {'start': start, 'help': helpFun, 'stats': stats, 'who': who, 'map': mapFun,
                 'w': mapFun, 's': mapFun, 'a': mapFun, 'd': mapFun,
-                'talk': talk, 'selection': selection}
+                'talk': talk, 'selection': selection}}
 
 @csrf_exempt
 def main(request):
     command = request.POST['command'].lower().strip(' ')
+    term = request.POST['terminal']
 
     result = {}
     if not request.user.is_authenticated():    
@@ -166,7 +167,7 @@ def main(request):
         #     Users.objects.create(userid=request.user.id, )
 
         args = command.split(' ')
-
+        commandList = commandLists[term]
 
         if args[0] >= '1' and args[0] <= '9':
             result = commandList['selection'](request, args)

@@ -59,6 +59,68 @@
                 },
             });
         }
+
+        // function authFunc(term, result){
+        //     var state = result.redir=='login'?'login':'register';
+        //     term.push({}, {
+        //         login: result.redir=='login'?loginFunc:regFunc,
+        //         prompt: state + ' > ',
+        //         name: state,
+        //         keydown: function(e) {
+        //             //disable keyboard when animating
+        //                 if(e.KeyCode == 27) {
+        //                     $.terminal.active().pop();
+        //                 }
+        //             }});
+        // }
+
+        function authFunc(term, result){
+            var state = result.redir=='login'?'login':'register';
+            term.push(function(command, term) {
+                if (command != '') {
+                    var history = term.history();
+                    history.disable();
+                    name = command;
+                    term.set_mask(true);
+                    term.push(function(command, term){
+                        if (command != '') {
+                            $.ajax({type: 'POST', data: {
+                                'user': name,
+                                'password': command, 
+                                csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                                url: "http://localhost:8000/backend/login/", 
+                                success: function(result){
+                                    if (result.code){
+                                        term.echo("[[;red;]"+result.msg+"]");
+                                    }else{
+                                        term.error(result.msg);
+                                    }
+                                    term.pop();
+                                    history.enable();
+                                    term.pop();
+                                },
+                            });
+                        } else {
+                        }
+
+                    }, {
+                        prompt: '请输入密码: ',
+                        mask: true,
+                    });
+
+                } else {
+                   term.echo('');
+                }
+            }, {
+                prompt: '请输入用户名: ',
+                name: state,
+                keydown: function(e) {
+                    if(e.which == 27) {
+                        $.terminal.active().pop();
+                    }
+                }});
+        }
+
         jQuery(function($, undefined) {
             var sent = false;
             $('#term').terminal(function(command, term) {
@@ -68,15 +130,13 @@
                         sent = true;
                         $.ajax({type: 'POST', data: {
                                 'command': command, 
+                                'terminal': term.name(),
                                 csrfmiddlewaretoken: '{{ csrf_token }}',}, 
                             url: "http://localhost:8000/backend/", 
                             success: function(result){
                                 term.echo(result.msg);
                                 if (result.redir) {
-                                    term.push({}, {
-                                        login: result.redir=='login'?loginFunc:regFunc,
-                                        prompt: 'login > ',
-                                        name: 'login'});
+                                    authFunc(term, result);
                                 }
                                 sent = false;},
                         });
@@ -87,11 +147,11 @@
                    term.echo('');
                 }
             }, {
-                greetings: '',
-                name: 'mud',
+                greetings: '欢迎来到江湖群侠转！',
+                name: 'main',
                 height: $('#term').height,
                 prompt: '> ',
-                competion: ['login', 'logout', 'exit'],
+                completion: ['login', 'logout', 'exit', 'register'],
                 keydown: function(e) {
                 //disable keyboard when animating
                     if(sent) {

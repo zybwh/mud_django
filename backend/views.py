@@ -195,10 +195,14 @@ def regUser(request):
     username = request.POST.get('user')
     pwd = request.POST.get('password')
     if User.objects.filter(username=username).exists():
-        return  JsonResponse({'msg':'用户名已存在！', 'code': 0})
+        return  JsonResponse({'code': 0})
     user = User.objects.create_user(username,'',pwd)
-    return JsonResponse({'msg':'注册成功！', 'code': 1})
+    return JsonResponse({'code': 1})
 
-
-
+@csrf_exempt
+def checkUsername(request):
+    username = request.POST.get('user')
+    if User.objects.filter(username=username).exists():
+        return JsonResponse({'code': 0})
+    return JsonResponse({'code': 1})
 

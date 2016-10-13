@@ -5,5 +5,6 @@ urlpatterns = [
     url(r'^$', views.main, name='mainCollector'),
     url(r'^login/', views.loginUser, name='loginCollector'),
     url(r'^reg/', views.regUser, name='regCollector'),
+    url(r'^checkUsername/', views.checkUsername, name='checkUsername'),
 ]
 

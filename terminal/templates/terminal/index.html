@@ -24,58 +24,107 @@
         <div id="term" style="height:100vh; padding:0px; padding-left:10px; padding-top:10px"></div>
     </body>
     <script>
-        function loginFunc(name, password, callback) {
-            $.ajax({type: 'POST', data: {
-                    'user': name,
-                    'password': password}, 
-                url: "http://localhost:8000/backend/login/", 
-                success: function(result){
-                    if (result.code){
-                        $.terminal.active().echo("[[;red;]"+result.msg+"]");
-                        callback(true);
-                        $.terminal.active().pop();
-                    }else{
-                        $.terminal.active().error(result.msg);
-                        callback(false);
-                    }
-                },
-            });
+
+        function onEsc(popTimes, term) {
+            term = term || $.terminal.active();
+            term.resume();
+            term.history().enable();
+            for (i = 0; i < popTimes; i++) {
+                term.pop();
+            }
         }
-        function regFunc(name, password, callback) {
-            $.ajax({type: 'POST', data: {
-                    'user': name,
-                    'password': password, 
-                    csrfmiddlewaretoken: '{{ csrf_token }}',}, 
-                url: "http://localhost:8000/backend/reg/", 
-                success: function(result){
-                    if (result.code){
-                        $.terminal.active().echo("[[;red;]"+result.msg+"]");
-                        setTimeout(function(){window.location.href  = "http://localhost:8000/login/";}, 1000);
-                        callback(true);
-                    }else{
-                        $.terminal.active().error(result.msg);
-                        callback(false);
+        function regFuncHelper(term) {
+            term.set_mask(true);
+            term.push(function(command, term){
+                if (command != '') {
+                    password = command;
+                    term.set_mask(true);
+                    term.push(function(command, term){
+                        if (command != '') {
+                            if (command != password) {
+                                term.error('两次密码不一致！');
+                                term.pop();
+                            } else {
+                                term.pause();
+                                $.ajax({type: 'POST', data: {
+                                        'user': name,
+                                        'password': password, 
+                                        csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                                    url: "http://localhost:8000/backend/reg/", 
+                                    success: function(result){
+                                        if (result.code){
+                                            term.echo('注册成功！请输入 [[;green;]login] 进行登录！');
+                                        }else{
+                                            term.error('注册失败！请重新尝试！');
+                                        }
+                                        onEsc(3, term);
+                                    },
+                                });
+                            }
+                        } else {
+                            term.echo('');
+                        }
+
+                    }, {
+                        prompt: '请再次输入密码: ',
+                        mask: true,
+                        keydown: function(e) {
+                            if(e.which == 27) {
+                                onEsc(3);
+                            }
+                        }});
+                } else {
+                    term.echo('');
+                }
+
+            }, {
+                prompt: '请输入密码: ',
+                mask: true,
+                keydown: function(e) {
+                    if(e.which == 27) {
+                        onEsc(2);
                     }
-                },
-            });
+                }});
         }
 
-        // function authFunc(term, result){
-        //     var state = result.redir=='login'?'login':'register';
-        //     term.push({}, {
-        //         login: result.redir=='login'?loginFunc:regFunc,
-        //         prompt: state + ' > ',
-        //         name: state,
-        //         keydown: function(e) {
-        //             //disable keyboard when animating
-        //                 if(e.KeyCode == 27) {
-        //                     $.terminal.active().pop();
-        //                 }
-        //             }});
-        // }
+        function regFunc(term){
+            term.push(function(command, term) {
+                isExist = false;
+                if (command != '') {
+                    var history = term.history();
+                    history.disable();
+                    name = command;
+                    term.pause();
+                    $.ajax({type: 'POST', data: {
+                        'user': name,
+                        csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                        url: "http://localhost:8000/backend/checkUsername/", 
+                        success: function(result){
+                            term.resume();
+                            if (result.code){
+                                term.echo("[[;green;]该用户名可以被注册！]");
+                                regFuncHelper(term);
+                            }else{
+                                term.error('该用户名已被使用！');
+                            }
 
-        function authFunc(term, result){
-            var state = result.redir=='login'?'login':'register';
+                        },
+                    });
+                } else {
+                   term.echo('');
+                }
+            }, {
+                greetings: '注册新用户',
+                prompt: '请输入新用户名: ',
+                name: 'reg',
+                keydown: function(e) {
+                    if(e.which == 27) {
+                        onEsc(1);
+                    }
+                }});
+        }
+
+        function loginFunc(term){
             term.push(function(command, term) {
                 if (command != '') {
                     var history = term.history();
@@ -84,6 +133,7 @@
                     term.set_mask(true);
                     term.push(function(command, term){
                         if (command != '') {
+                            term.pause();
                             $.ajax({type: 'POST', data: {
                                 'user': name,
                                 'password': command, 
@@ -95,28 +145,31 @@
                                     }else{
                                         term.error(result.msg);
                                     }
-                                    term.pop();
-                                    history.enable();
-                                    term.pop();
+                                    onEsc(2);
                                 },
                             });
                         } else {
+                            term.echo('');
                         }
 
                     }, {
                         prompt: '请输入密码: ',
                         mask: true,
-                    });
-
+                        keydown: function(e) {
+                            if(e.which == 27) {
+                                onEsc(2);
+                            }
+                        }});
                 } else {
                    term.echo('');
                 }
             }, {
+                greetings: '登录',
                 prompt: '请输入用户名: ',
-                name: state,
+                name: 'login',
                 keydown: function(e) {
                     if(e.which == 27) {
-                        $.terminal.active().pop();
+                        onEsc(1);
                     }
                 }});
         }
@@ -125,29 +178,28 @@
             var sent = false;
             $('#term').terminal(function(command, term) {
                 if (command != '') {
-                    try {
-                        // var result = window.eval(command);
-                        sent = true;
-                        $.ajax({type: 'POST', data: {
-                                'command': command, 
-                                'terminal': term.name(),
-                                csrfmiddlewaretoken: '{{ csrf_token }}',}, 
-                            url: "http://localhost:8000/backend/", 
-                            success: function(result){
-                                term.echo(result.msg);
-                                if (result.redir) {
-                                    authFunc(term, result);
-                                }
-                                sent = false;},
-                        });
-                    } catch(e) {
-                        term.error(new String(e));
-                    }
+                    term.pause();
+                    $.ajax({type: 'POST', data: {
+                            'command': command, 
+                            'terminal': term.name(),
+                            csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                        url: "http://localhost:8000/backend/", 
+                        success: function(result){
+                            term.resume();
+                            term.echo(result.msg);
+                            if (result.redir) {
+                                if (result.redir == 'login')
+                                    loginFunc(term);
+                                else
+                                    regFunc(term);
+                            }
+                        },
+                    });
                 } else {
-                   term.echo('');
+                    term.echo('');
                 }
             }, {
-                greetings: '欢迎来到江湖群侠转！',
+                greetings: '欢迎来到江湖群侠传！',
                 name: 'main',
                 height: $('#term').height,
                 prompt: '> ',

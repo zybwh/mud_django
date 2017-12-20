@@ -33,6 +33,59 @@
                 term.pop();
             }
         }
+
+        function firstTimeLoginFunc(term) {
+            term.push(function(command, term) {
+                if (command != '') {
+                    var history = term.history();
+                    history.disable();
+                    nickname = command
+                    term.pause();
+                    $.ajax({type: 'POST', data: {
+                        'nickname': nickname,
+                        csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                        url: "http://localhost:8000/backend/nickNameCheck/", 
+                        success: function(result){
+                            term.resume();
+                            if (result.code){
+                                term.echo('确定使用这个名字吗？输入 [[;green;]yes] 确定,其他则取消');
+                                term.push(function(command, term) {
+                                    if (command == 'yes') {
+                                        term.pause();
+                                        $.ajax({type: 'POST', data: {
+                                            'nickname': nickname,
+                                            csrfmiddlewaretoken: '{{ csrf_token }}',}, 
+                                            url: "http://localhost:8000/backend/firstTimeLogin/", 
+                                            success: function(result){
+                                                if (result.code){
+                                                    term.echo("[[;red;]注册成功！]");
+                                                    onEsc(2);
+                                                    term.exec('map', true);
+                                                }
+                                            },
+                                        });
+                                    } else {
+                                       term.pop();
+                                    }
+                                }, {
+                                    prompt: '确认吗？',
+                                    });
+                            }else{
+                                term.error("大侠这个名字已经被注册了！请换一个试试！");
+                            }
+                        },
+                    });
+
+                } else {
+                   term.echo('');
+                }
+            }, {
+                prompt: '请输入自己的名字: ',
+                name: 'firstTimeLogin',
+                });
+        }
+
+
         function regFuncHelper(term) {
             term.set_mask(true);
             term.push(function(command, term){
@@ -146,6 +199,7 @@
                                         term.error(result.msg);
                                     }
                                     onEsc(2);
+                                    term.exec('map', true);
                                 },
                             });
                         } else {
@@ -190,8 +244,10 @@
                             if (result.redir) {
                                 if (result.redir == 'login')
                                     loginFunc(term);
-                                else
+                                else if (result.redir == 'reg')
                                     regFunc(term);
+                                else if (result.redir == 'firstTimeLogin')
+                                    firstTimeLoginFunc(term);
                             }
                         },
                     });

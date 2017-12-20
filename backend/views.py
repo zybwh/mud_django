@@ -11,7 +11,10 @@ from django.views.decorators.csrf import csrf_exempt
 from backend.models import *
 from backend.map.map import MapObject
 from django.forms.models import model_to_dict
+from datetime import datetime
 import json
+
+from Command import *
 
 
 # Create your views here.
@@ -26,42 +29,13 @@ def start(request, command):
 def helpFun(request, command):
     return {'msg': '还没做'}
 
-def mapFun(request, args):
-    direction = args[0]
-    current_location = Users.objects.get(userid=request.user.id).location
-    if direction == 'map':
-        surround = mapObject.getSurround(current_location)
-
-        msg = u'你现在位于 [[;yellow;]' + mapObject.translate(current_location) + u'] \n'
-        msg += u'当前地图有 [[;green;]' + str(mapObject.getPeople(current_location)) + u'] 个人，输入 [[;green;]who] 查看详细信息。\n'
-        msg += u'你可以像以下方向行走：\n'
-
-        for direction in surround.keys():
-            if surround[direction]:
-                msg += u'[[;green;]' + direction + ']: [[;yellow;] '+ mapObject.translate(surround[direction]) + ']   '
-
-        return {'msg': msg}
-    else:
-        dest = mapObject.moveDirection(current_location, direction)
-        if dest:
-            Users.objects.filter(userid=request.user.id).update(location=dest, pplList=None)
-            res = {'msg': u'向'+mapObject.DIRs[direction]+u'走，前往 [[;yellow;]' + mapObject.translate(dest) + u']'}
-            info = mapFun(request, ['map'])
-            ppl = who(request, [''])
-            res['msg'] += u'\n' + info['msg'] + '\n' + ppl['msg']
-            return res
-
-        else:
-            return {'msg': u'大侠，[[;yellow;]'+mapObject.DIRs[direction]+u'边] 真的没路了！换个方向吧！'}
-
-
 def stats(request, command):
     stats = Users.objects.get(userid=request.user).stats
     msg = "气血：[[;red;]" + str(stats.currentHp) + "]/[[;red;]" + str(stats.maxHp) + "]\n"
     msg += "内力：[[;blue;]" + str(stats.currentMana) + "]/[[;blue;]" + str(stats.maxMana) + "]\n"
     msg += "修为：[[;green;]" + str(stats.currentExp) + "]/[[;green;]" + str(stats.nextExp) + "]\n"
     msg += "力量：[[;yellow;]" + str(stats.power) + "]  "
-    msg += "灵巧：[[;yellow;]" + str(stats.agility) + "]  "
+    msg += "灵巧：[[;yellow;]" + str(stats.agility) + "]  "§
     msg += "悟性：[[;yellow;]" + str(stats.intelligent) + "]"
 
     return {'msg': msg}
@@ -163,8 +137,8 @@ def main(request):
             logout(request)
             return JsonResponse({'msg': '登出成功！', 'code': 'logout'})
 
-        # if not Users.objects.filter(userid=request.user.id).exists():
-        #     Users.objects.create(userid=request.user.id, )
+        if not Users.objects.filter(userid=request.user.id).exists():
+            return JsonResponse({'msg': '大侠初入江湖，首先先为自己取个名吧！', 'redir': 'firstTimeLogin'})
 
         args = command.split(' ')
         commandList = commandLists[term]
@@ -178,6 +152,21 @@ def main(request):
 
     return JsonResponse(result)
 
+@csrf_exempt
+def firstTimeLogin(request):
+    nickName = request.POST['nickname'].strip(' ')
+    time = datetime.now()
+    stats = UserStats.objects.create();
+    current_user = Users.objects.create(userid=request.user, username=nickName, location='luoyang', 
+        createTime=time, lastLogin=time, lastToken='', stats=stats)
+    return JsonResponse({'code': 1})
+
+@csrf_exempt
+def nickNameCheck(request):
+    nickName = request.POST['nickname'].strip(' ')
+    if Users.objects.filter(username=nickName).exists():
+        return JsonResponse({'code': 0})
+    return JsonResponse({'code': 1})
 
 @csrf_exempt
 def loginUser(request):
